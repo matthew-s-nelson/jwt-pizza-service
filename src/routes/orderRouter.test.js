@@ -32,7 +32,7 @@ beforeAll(async () => {
 
 test('Get pizza menu', async () => {
     const newItem = { title: 'Test Pizza', image: 'pizza.jpg', price: 9.99, description: 'A test pizza' };
-    const putItemRes = await addMenuItem(newItem);
+    await addMenuItem(newItem);
 
     const res = await request(app)
         .get('/api/order/menu')

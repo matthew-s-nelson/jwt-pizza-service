@@ -5,6 +5,7 @@ const { Role, DB } = require('../database/database.js');
 const testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
 let testAdminUser;
 let testUserAuthToken;
+let testAdminAuthToken;
 
 function randomName() {
   return Math.random().toString(36).substring(2, 12);
@@ -57,7 +58,6 @@ test('get franchises', async () => {
     // Create a franchise to make sure there is at least one
     const createRes = await createFranchise(testAdminAuthToken, testAdminUser);
     expect(createRes.status).toBe(200);
-    const franchiseName = createRes.body.name;
 
     const res = await request(app)
       .get('/api/franchise')
