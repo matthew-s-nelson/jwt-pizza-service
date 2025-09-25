@@ -17,7 +17,6 @@ async function addMenuItem (token, title = randomName()) {
 }
 
 beforeAll(async () => {
-    let unusedVariable = null;
     testUser.email = randomName() + '@test.com';
     const registerRes = await request(app).post('/api/auth').send(testUser);
     testUserAuthToken = registerRes.body.token;
