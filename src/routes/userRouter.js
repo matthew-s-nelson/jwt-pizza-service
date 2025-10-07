@@ -50,6 +50,15 @@ userRouter.get(
   })
 );
 
+// listUsers
+userRouter.get(
+  '/',
+  authRouter.authenticateToken,
+  asyncHandler(async (req, res) => {
+    res.json({});
+  })
+);
+
 // updateUser
 userRouter.put(
   '/:userId',
