@@ -90,6 +90,7 @@ test('list users', async () => {
       id: expect.any(Number),
       name: expect.any(String),
       email: expect.any(String),
+      roles: expect.arrayContaining([{ role: expect.any(String) }]),
     }]),
   });
 });
