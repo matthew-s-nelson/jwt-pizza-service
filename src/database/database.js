@@ -75,7 +75,7 @@ class DB {
     }
   }
 
-async getUsers(authUser, page = 0, limit = 10, nameFilter = '*') {
+  async getUsers(page = 0, limit = 10, nameFilter = '*') {
     const connection = await this.getConnection();
 
     const offset = page * limit;
@@ -93,7 +93,7 @@ async getUsers(authUser, page = 0, limit = 10, nameFilter = '*') {
     } finally {
       connection.end();
     }
-}
+  }
   
 
   async updateUser(userId, name, email, password) {
