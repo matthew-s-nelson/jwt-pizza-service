@@ -73,7 +73,7 @@ test('list users unauthorized', async () => {
 });
 
 test('list users forbidden', async () => {
-  const [user, userToken] = await registerUser(request(app));
+  const [, userToken] = await registerUser(request(app));
   const listUsersRes = await request(app)
     .get('/api/user')
     .set('Authorization', 'Bearer ' + userToken);
@@ -95,7 +95,7 @@ test('list users', async () => {
 });
 
 test('Delete user unauthorized', async () => {
-  const [user, userToken] = await registerUser(request(app));
+  const [user] = await registerUser(request(app));
   const deleteRes = await request(app)
     .delete(`/api/user/${user.id}`)
 
@@ -112,7 +112,7 @@ test('Delete user forbidden', async () => {
 });
 
 test('Delete user', async () => {
-  const [user, userToken] = await registerUser(request(app));
+  const [user] = await registerUser(request(app));
   const deleteRes = await request(app)
     .delete(`/api/user/${user.id}`)
     .set('Authorization', 'Bearer ' + testAdminAuthToken);
