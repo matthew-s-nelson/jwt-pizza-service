@@ -17,47 +17,26 @@ function getMemoryUsagePercentage() {
 
 // Metrics stored in memory
 const requests = {};
-let greetingChangedCount = 0;
-
-// Function to track when the greeting is changed
-function greetingChanged() {
-  greetingChangedCount++;
-}
+let totalRequests = 0;
 
 // Middleware to track requests
-function requestTracker(req, res, next, pathPrefix = '') {
-    const endpoint = `[${req.method}] ${pathPrefix}${req.path}`;
-    console.log(`Tracking request: [${req.method}] ${req.path}`);
-  requests[endpoint] = (requests[endpoint] || 0) + 1;
+function requestTracker(req, res, next) {
+  const method = `${req.method}`;
+  requests[method] = (requests[method] || 0) + 1;
+  totalRequests++;
   next();
-}
-
-function authRequestTracker(req, res, next) {
-  requestTracker(req, res, next, '/api/auth');
-}
-
-function userRequestTracker(req, res, next) {
-  requestTracker(req, res, next, '/api/user');
-}
-
-function orderRequestTracker(req, res, next) {
-  requestTracker(req, res, next, '/api/order');
-}
-
-function pizzaRequestTracker(req, res, next) {
-  requestTracker(req, res, next, '/api/pizza');
 }
 
 // This will periodically send metrics to Grafana
 setInterval(() => {
   const metrics = [];
-  Object.keys(requests).forEach((endpoint) => {
-    metrics.push(createMetric('cpuUsage', getCpuUsagePercentage(), 'percent', 'gauge', 'asDouble', {}));
-    metrics.push(createMetric('memoryUsage', getMemoryUsagePercentage(), 'percent', 'gauge', 'asDouble', {}));
-    metrics.push(createMetric('requests', requests[endpoint], '1', 'sum', 'asInt', { endpoint }));
-    // metrics.push(createMetric('greetingChange', greetingChangedCount, '1', 'sum', 'asInt', {}));
+  Object.keys(requests).forEach((method) => {
+      metrics.push(createMetric('requests', requests[method], '1', 'sum', 'asInt', { method }));
   });
-
+    
+  metrics.push(createMetric('totalRequests', totalRequests, '1', 'sum', 'asInt', {}));
+  metrics.push(createMetric('memoryUsage', getMemoryUsagePercentage(), 'percent', 'gauge', 'asDouble', {}));
+  metrics.push(createMetric('cpuUsage', getCpuUsagePercentage(), 'percent', 'gauge', 'asDouble', {}));
   sendMetricToGrafana(metrics);
 }, 10000);
 
@@ -121,4 +100,4 @@ function sendMetricToGrafana(metrics) {
     });
 }
 
-module.exports = { requestTracker, greetingChanged, authRequestTracker, userRequestTracker, orderRequestTracker, pizzaRequestTracker };
+module.exports = { requestTracker };
