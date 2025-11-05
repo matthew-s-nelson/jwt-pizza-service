@@ -79,6 +79,7 @@ authRouter.put(
     const { email, password } = req.body;
     const user = await DB.getUser(email, password);
     const auth = await setAuth(user);
+    metrics.incrementActiveUsers();
     res.json({ user: user, token: auth });
   })
 );
@@ -86,9 +87,10 @@ authRouter.put(
 // logout
 authRouter.delete(
   '/',
-  authRouter.authenticateToken,
+  metrics.decrementActiveUsers,
   asyncHandler(async (req, res) => {
     await clearAuth(req);
+    metrics.decrementActiveUsers();
     res.json({ message: 'logout successful' });
   })
 );

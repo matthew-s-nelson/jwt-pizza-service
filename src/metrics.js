@@ -18,6 +18,7 @@ function getMemoryUsagePercentage() {
 // Metrics stored in memory
 const requests = {};
 let totalRequests = 0;
+let activeUsers = 0;
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
@@ -25,6 +26,14 @@ function requestTracker(req, res, next) {
   requests[method] = (requests[method] || 0) + 1;
   totalRequests++;
   next();
+}
+
+function incrementActiveUsers() {
+  activeUsers++;
+}
+
+function decrementActiveUsers() {
+  activeUsers = Math.max(0, activeUsers - 1);
 }
 
 // This will periodically send metrics to Grafana
@@ -37,6 +46,7 @@ setInterval(() => {
   metrics.push(createMetric('totalRequests', totalRequests, '1', 'sum', 'asInt', {}));
   metrics.push(createMetric('memoryUsage', getMemoryUsagePercentage(), 'percent', 'gauge', 'asDouble', {}));
   metrics.push(createMetric('cpuUsage', getCpuUsagePercentage(), 'percent', 'gauge', 'asDouble', {}));
+  metrics.push(createMetric('activeUsers', activeUsers, '1', 'gauge', 'asInt', {}));
   sendMetricToGrafana(metrics);
 }, 10000);
 
@@ -100,4 +110,4 @@ function sendMetricToGrafana(metrics) {
     });
 }
 
-module.exports = { requestTracker };
+module.exports = { requestTracker, incrementActiveUsers, decrementActiveUsers };
