@@ -19,6 +19,7 @@ function getMemoryUsagePercentage() {
 const requests = {};
 let totalRequests = 0;
 let activeUsers = 0;
+let authenticationAttempts = {};
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
@@ -36,6 +37,14 @@ function decrementActiveUsers() {
   activeUsers = Math.max(0, activeUsers - 1);
 }
 
+function incrementSuccessfulAuthentications() {
+    authenticationAttempts['successful'] = (authenticationAttempts['successful'] || 0) + 1;
+}
+
+function incrementFailedAuthentications() {
+    authenticationAttempts['failed'] = (authenticationAttempts['failed'] || 0) + 1;
+}
+
 // This will periodically send metrics to Grafana
 setInterval(() => {
   const metrics = [];
@@ -47,6 +56,8 @@ setInterval(() => {
   metrics.push(createMetric('memoryUsage', getMemoryUsagePercentage(), 'percent', 'gauge', 'asDouble', {}));
   metrics.push(createMetric('cpuUsage', getCpuUsagePercentage(), 'percent', 'gauge', 'asDouble', {}));
   metrics.push(createMetric('activeUsers', activeUsers, '1', 'gauge', 'asInt', {}));
+  metrics.push(createMetric('authenticationAttempts', authenticationAttempts['successful'] || 0, '1', 'sum', 'asInt', { status: 'successful' }));
+  metrics.push(createMetric('authenticationAttempts', authenticationAttempts['failed'] || 0, '1', 'sum', 'asInt', { status: 'failed' }));
   sendMetricToGrafana(metrics);
 }, 10000);
 
@@ -110,4 +121,4 @@ function sendMetricToGrafana(metrics) {
     });
 }
 
-module.exports = { requestTracker, incrementActiveUsers, decrementActiveUsers };
+module.exports = { requestTracker, incrementActiveUsers, decrementActiveUsers, incrementSuccessfulAuthentications, incrementFailedAuthentications };

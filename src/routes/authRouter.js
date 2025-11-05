@@ -64,6 +64,7 @@ authRouter.post(
   asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
+      metrics.incrementFailedAuthentications();
       return res.status(400).json({ message: 'name, email, and password are required' });
     }
     const user = await DB.addUser({ name, email, password, roles: [{ role: Role.Diner }] });
@@ -79,7 +80,6 @@ authRouter.put(
     const { email, password } = req.body;
     const user = await DB.getUser(email, password);
     const auth = await setAuth(user);
-    metrics.incrementActiveUsers();
     res.json({ user: user, token: auth });
   })
 );
@@ -98,6 +98,8 @@ authRouter.delete(
 async function setAuth(user) {
   const token = jwt.sign(user, config.jwtSecret);
   await DB.loginUser(user.id, token);
+  metrics.incrementSuccessfulAuthentications
+  metrics.incrementActiveUsers();
   return token;
 }
 
