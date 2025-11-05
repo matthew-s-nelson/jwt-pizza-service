@@ -20,6 +20,8 @@ const requests = {};
 let totalRequests = 0;
 let activeUsers = 0;
 let authenticationAttempts = {};
+let numPizzasOrdered = 0;
+let pizzaRevenue = 0;
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
@@ -45,6 +47,11 @@ function incrementFailedAuthentications() {
     authenticationAttempts['failed'] = (authenticationAttempts['failed'] || 0) + 1;
 }
 
+function handlePizzaMetrics(order) {
+    numPizzasOrdered += order.items.length;
+    pizzaRevenue += order.items.reduce((sum, item) => sum + item.price, 0);
+}
+
 // This will periodically send metrics to Grafana
 setInterval(() => {
   const metrics = [];
@@ -53,6 +60,8 @@ setInterval(() => {
   });
     
   metrics.push(createMetric('totalRequests', totalRequests, '1', 'sum', 'asInt', {}));
+  metrics.push(createMetric('pizzasOrdered', numPizzasOrdered, '1', 'sum', 'asInt', {}));
+  metrics.push(createMetric('pizzaRevenue', pizzaRevenue, 'USD', 'sum', 'asDouble', {}));
   metrics.push(createMetric('memoryUsage', getMemoryUsagePercentage(), 'percent', 'gauge', 'asDouble', {}));
   metrics.push(createMetric('cpuUsage', getCpuUsagePercentage(), 'percent', 'gauge', 'asDouble', {}));
   metrics.push(createMetric('activeUsers', activeUsers, '1', 'gauge', 'asInt', {}));
@@ -121,4 +130,4 @@ function sendMetricToGrafana(metrics) {
     });
 }
 
-module.exports = { requestTracker, incrementActiveUsers, decrementActiveUsers, incrementSuccessfulAuthentications, incrementFailedAuthentications };
+module.exports = { requestTracker, incrementActiveUsers, decrementActiveUsers, incrementSuccessfulAuthentications, incrementFailedAuthentications, handlePizzaMetrics };

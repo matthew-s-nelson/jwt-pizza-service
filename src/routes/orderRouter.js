@@ -87,6 +87,7 @@ orderRouter.post(
       headers: { 'Content-Type': 'application/json', authorization: `Bearer ${config.factory.apiKey}` },
       body: JSON.stringify({ diner: { id: req.user.id, name: req.user.name, email: req.user.email }, order }),
     });
+    metrics.handlePizzaMetrics(order);
     const j = await r.json();
     if (r.ok) {
       res.send({ order, followLinkToEndChaos: j.reportUrl, jwt: j.jwt });
