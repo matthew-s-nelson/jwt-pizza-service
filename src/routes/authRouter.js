@@ -98,7 +98,7 @@ authRouter.delete(
 async function setAuth(user) {
   const token = jwt.sign(user, config.jwtSecret);
   await DB.loginUser(user.id, token);
-  metrics.incrementSuccessfulAuthentications
+  metrics.incrementSuccessfulAuthentications();
   metrics.incrementActiveUsers();
   return token;
 }
