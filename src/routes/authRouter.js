@@ -87,7 +87,6 @@ authRouter.put(
 // logout
 authRouter.delete(
   '/',
-  metrics.decrementActiveUsers,
   asyncHandler(async (req, res) => {
     await clearAuth(req);
     metrics.decrementActiveUsers();
