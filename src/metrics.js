@@ -23,12 +23,26 @@ let authenticationAttempts = {};
 let numPizzasOrdered = 0;
 let pizzaRevenue = 0;
 let failedOrderAttempts = 0;
+let latencyMeasurements = [];
+let lastLatency = 0;
+let requestLatencies = [];
+let lastRequestLatency = 0;
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
+  const startTime = Date.now();
+  
   const method = `${req.method}`;
   requests[method] = (requests[method] || 0) + 1;
   totalRequests++;
+  
+  // Track request latency when response finishes
+  res.on('finish', () => {
+    const latency = Date.now() - startTime;
+    requestLatencies.push(latency);
+    lastRequestLatency = latency;
+  });
+  
   next();
 }
 
@@ -57,6 +71,11 @@ function incrementFailedOrderAttempts() {
     failedOrderAttempts++;
 }
 
+function observeFactoryLatency(latency) {
+  latencyMeasurements.push(latency);
+  lastLatency = latency;
+}
+
 // This will periodically send metrics to Grafana
 setInterval(() => {
   const metrics = [];
@@ -73,6 +92,31 @@ setInterval(() => {
   metrics.push(createMetric('failedOrderAttempts', failedOrderAttempts, '1', 'sum', 'asInt', {}));
   metrics.push(createMetric('authenticationAttempts', authenticationAttempts['successful'] || 0, '1', 'sum', 'asInt', { status: 'successful' }));
   metrics.push(createMetric('authenticationAttempts', authenticationAttempts['failed'] || 0, '1', 'sum', 'asInt', { status: 'failed' }));
+  
+  // Send individual factory latency measurement (last recorded)
+  if (lastLatency > 0) {
+    metrics.push(createMetric('factoryLatency', lastLatency, 'ms', 'gauge', 'asInt', {}));
+  }
+  
+  // Send average factory latency measurement
+  if (latencyMeasurements.length > 0) {
+    const avgLatency = latencyMeasurements.reduce((sum, val) => sum + val, 0) / latencyMeasurements.length;
+    metrics.push(createMetric('factoryLatencyAvg', avgLatency, 'ms', 'gauge', 'asDouble', {}));
+    latencyMeasurements = [];
+  }
+  
+  // Send individual request latency measurement (last recorded)
+  if (lastRequestLatency > 0) {
+    metrics.push(createMetric('requestLatency', lastRequestLatency, 'ms', 'gauge', 'asInt', {}));
+  }
+  
+  // Send average request latency measurement
+  if (requestLatencies.length > 0) {
+    const avgRequestLatency = requestLatencies.reduce((sum, val) => sum + val, 0) / requestLatencies.length;
+    metrics.push(createMetric('requestLatencyAvg', avgRequestLatency, 'ms', 'gauge', 'asDouble', {}));
+    requestLatencies = [];
+  }
+  
   sendMetricToGrafana(metrics);
 }, 10000);
 
@@ -136,4 +180,4 @@ function sendMetricToGrafana(metrics) {
     });
 }
 
-module.exports = { requestTracker, incrementActiveUsers, decrementActiveUsers, incrementSuccessfulAuthentications, incrementFailedAuthentications, handlePizzaMetrics, incrementFailedOrderAttempts };
+module.exports = { requestTracker, incrementActiveUsers, decrementActiveUsers, incrementSuccessfulAuthentications, incrementFailedAuthentications, handlePizzaMetrics, incrementFailedOrderAttempts, observeFactoryLatency };
