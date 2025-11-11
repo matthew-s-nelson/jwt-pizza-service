@@ -32,6 +32,18 @@ class Logger {
     this.log('info', 'db query', logData);
   };
 
+  logUnhandledError(statusCode, errMessage, stacktrace) {
+    const logData = {
+        authorized: null,
+        path: stacktrace,
+        method: null,
+        statusCode: statusCode,
+        reqBody: null,
+        resBody: { message: errMessage },
+    };
+    this.log('error', 'unhandled error', logData);
+  }
+
   log(level, type, logData) {
     const labels = { component: config.source, level: level, type: type };
     const values = [this.nowString(), this.sanitize(logData)];
