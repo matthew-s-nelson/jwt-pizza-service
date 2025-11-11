@@ -77,6 +77,18 @@ class Logger {
     return filledSql;
   }
 
+  logFactoryRequest(statusCode, reqBody, resBody) {
+    const logData = {
+        authorized: null,
+        path: '/api/order',
+        method: 'POST',
+        statusCode: statusCode,
+        reqBody: reqBody,
+        resBody: resBody,
+    };
+    this.log(statusCode === 200 ? 'info' : 'error', 'factory request', logData);
+  }
+
   logUnhandledError(statusCode, errMessage, stacktrace) {
     const logData = {
         authorized: null,
