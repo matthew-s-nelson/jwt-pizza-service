@@ -20,6 +20,18 @@ class Logger {
     next();
   };
 
+  dbLogger = (query, params) => {
+    let logData = {
+        authorized: null,
+        path: null,
+        method: null,
+        statusCode: null,
+        reqBody: query,
+        resBody: null,
+    };
+    this.log('info', 'db query', logData);
+  };
+
   log(level, type, logData) {
     const labels = { component: config.source, level: level, type: type };
     const values = [this.nowString(), this.sanitize(logData)];
