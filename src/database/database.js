@@ -340,8 +340,9 @@ class DB {
   }
 
   async getID(connection, key, value, table) {
-    logger.dbLogger(`SELECT id FROM ${table} WHERE ${key}=?`, [value]);
-    const [rows] = await connection.execute(`SELECT id FROM ${table} WHERE ${key}=?`, [value]);
+    let query = `SELECT id FROM ${table} WHERE ${key}=?`
+    logger.dbLogger(query, [value]);
+    const [rows] = await connection.execute(query, [value]);
     if (rows.length > 0) {
       return rows[0].id;
     }

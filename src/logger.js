@@ -21,6 +21,7 @@ class Logger {
   };
 
   dbLogger = (query, params) => {
+    query = this.fillSqlParams(query, params);
     let logData = {
         authorized: null,
         path: null,
@@ -31,6 +32,50 @@ class Logger {
     };
     this.log('info', 'db query', logData);
   };
+
+
+  fillSqlParams(sql, params) {
+    if (!params || params.length === 0) {
+      return sql;
+    }
+
+    let filledSql = sql;
+    let paramIndex = 0;
+
+    filledSql = filledSql.replace(/\?/g, () => {
+      if (paramIndex >= params.length) {
+        return '?';
+      }
+      
+      const param = params[paramIndex++];
+      
+      const isPassword = sql.toLowerCase().includes('password') && 
+                         typeof param === 'string' && 
+                         param.length > 10;
+
+      if (isPassword) {
+        return "'*******'";
+      }
+      
+      // Format the parameter based on its type
+      if (param === null) {
+        return 'NULL';
+      } else if (typeof param === 'string') {
+        // Escape single quotes and wrap in quotes
+        return `'${param.replace(/'/g, "''")}'`;
+      } else if (typeof param === 'number') {
+        return param.toString();
+      } else if (typeof param === 'boolean') {
+        return param ? '1' : '0';
+      } else if (param instanceof Date) {
+        return `'${param.toISOString()}'`;
+      } else {
+        return `'${String(param)}'`;
+      }
+    });
+
+    return filledSql;
+  }
 
   logUnhandledError(statusCode, errMessage, stacktrace) {
     const logData = {
