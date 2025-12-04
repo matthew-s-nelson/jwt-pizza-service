@@ -21,6 +21,16 @@ class DB {
     }
   }
 
+  async getMenuItem(itemId) {
+    const connection = await this.getConnection();
+    try {
+      const rows = await this.query(connection, `SELECT * FROM menu WHERE id = ?`, [itemId]);
+      return rows[0];
+    } finally {
+      connection.end();
+    }
+  }
+
   async addMenuItem(item) {
     const connection = await this.getConnection();
     try {
@@ -192,7 +202,8 @@ class DB {
       const orderId = orderResult.insertId;
       for (const item of order.items) {
         const menuId = await this.getID(connection, 'id', item.menuId, 'menu');
-        await this.query(connection, `INSERT INTO orderItem (orderId, menuId, description, price) VALUES (?, ?, ?, ?)`, [orderId, menuId, item.description, item.price]);
+        const menuItem = await this.getMenuItem(menuId);
+        await this.query(connection, `INSERT INTO orderItem (orderId, menuId, description, price) VALUES (?, ?, ?, ?)`, [orderId, menuId, item.description, menuItem.price]);
       }
       return { ...order, id: orderId };
     } finally {
